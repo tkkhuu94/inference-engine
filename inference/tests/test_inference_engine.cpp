@@ -9,8 +9,29 @@ protected:
   InferenceEngineTest()
       : engine_(InferenceParams{.padding_value = cv::Scalar(114, 114, 114)}) {}
 
+  static bool IsRegionSolidColor(const cv::Mat &full_image, cv::Rect region,
+                                 cv::Scalar expected_color);
+
   InferenceEngine engine_;
 };
+
+bool InferenceEngineTest::IsRegionSolidColor(const cv::Mat &full_image,
+                                             cv::Rect region,
+                                             cv::Scalar expected_color) {
+  // Extract the ROI
+  // This is O(1)
+  cv::Mat roi = full_image(region);
+
+  // Calculate absolute difference between ROI and the scalar
+  cv::Mat diff;
+  cv::absdiff(roi, expected_color, diff);
+
+  // Sum all the differences across all channels
+  cv::Scalar total_diff = cv::sum(diff);
+
+  // If sum is 0 in all channels, the region is identical to the scalar
+  return (total_diff[0] == 0.0 && total_diff[1] == 0.0 && total_diff[2] == 0.0);
+}
 
 TEST_F(InferenceEngineTest, LetterBoxTest) {
   cv::Mat source_image(1080, 1920, CV_8UC3, cv::Scalar(0, 0, 255));
@@ -19,27 +40,21 @@ TEST_F(InferenceEngineTest, LetterBoxTest) {
   ASSERT_EQ(letterboxed_result->rows, 640);
   ASSERT_EQ(letterboxed_result->cols, 640);
 
-  // Verify the top paddings are set to padding value
-  for (int c = 0; c < 640; c++) {
-    for (int r = 0; r < 140; r++) {
-      ASSERT_EQ((*letterboxed_result).at<cv::Vec3b>(r, c)[0], 114);
-    }
-  }
+  cv::Rect scaled_region(0, 140, 640, 360);
+  cv::Rect top_pad_rect(0, 0, 640, 140);
+  cv::Rect bottom_pad_rect(0, 500, 640, 140); // 640 - 500 = 140 height
 
-  // Verify the bottom paddings are set to padding value
-  for (int c = 0; c < 640; c++) {
-    for (int r = 500; r < 640; r++) {
-      ASSERT_EQ((*letterboxed_result).at<cv::Vec3b>(r, c)[0], 114);
-    }
-  }
+  EXPECT_TRUE(InferenceEngineTest::IsRegionSolidColor(
+      *letterboxed_result, top_pad_rect, cv::Scalar(114, 114, 114)))
+      << "Top padding contained non-grey pixels!";
 
-  // Verify the scaled image are copied to the center
-  for (int c = 0; c < 640; c++) {
-    for (int r = 140; r < 500; r++) {
-      ASSERT_EQ((*letterboxed_result).at<cv::Vec3b>(r, c)[2], 255);
-    }
-  }
+  EXPECT_TRUE(InferenceEngineTest::IsRegionSolidColor(
+      *letterboxed_result, bottom_pad_rect, cv::Scalar(114, 114, 114)))
+      << "Bottom padding contained non-grey pixels!";
 
+  EXPECT_TRUE(InferenceEngineTest::IsRegionSolidColor(
+      *letterboxed_result, scaled_region, cv::Scalar(0, 0, 255)))
+      << "Scaled image contained non-red pixels!";
 }
 
 } // namespace
