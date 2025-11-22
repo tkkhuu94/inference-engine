@@ -1,0 +1,10 @@
+# Bazel #
+#########
+.cache
+MODULE.bazel.lock
+bazel-*
+external
+
+# Generated #
+#############
+compile_commands.json
