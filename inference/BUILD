@@ -29,5 +29,6 @@ cc_binary(
     deps = [
         ":inference_engine",
         "@abseil-cpp//absl/log",
+        "@opencv",
     ],
 )
