@@ -10,6 +10,6 @@ local_path_repo = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl",
 
 local_path_repo(
     name = "opencv",
-    path = "/usr/include/opencv4",
+    path = "/usr/local/include/opencv4",
     build_file = "//third_party/opencv:BUILD",
 )
