@@ -1,8 +1,9 @@
 #ifndef INFERENCE_NON_MAX_SUPPRESSION_H_
 #define INFERENCE_NON_MAX_SUPPRESSION_H_
 
-#include "inference/detection.h"
 #include "opencv2/core/types.hpp"
+
+#include "inference/detection.h"
 
 namespace inference {
 
