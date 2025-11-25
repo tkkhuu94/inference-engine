@@ -1,18 +1,30 @@
-#include "inference/inference_engine.h"
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
+
+#include "inference/inference_engine.h"
 
 namespace inference {
 namespace {
 class InferenceEngineTest : public ::testing::Test {
 protected:
-  InferenceEngineTest()
-      : engine_(InferenceParams{.padding_value = cv::Scalar(114, 114, 114)}) {}
+  void SetUp() override {
+    auto inference_engine = InferenceEngine::Create(
+
+        InferenceParams{.model_path = "/workspace/yolo11n.onnx",
+                        .input_image_width = 640,
+                        .input_image_height = 640,
+                        .padding_value = cv::Scalar(114, 114, 114),
+                        .confidence_threshold = 0.5,
+                        .iou_threshold = 0.5});
+
+    ASSERT_TRUE(inference_engine.ok());
+    engine_ = std::move(*inference_engine);
+  }
 
   static bool IsRegionSolidColor(const cv::Mat &full_image, cv::Rect region,
                                  cv::Scalar expected_color);
 
-  InferenceEngine engine_;
+  std::unique_ptr<InferenceEngine> engine_;
 };
 
 bool InferenceEngineTest::IsRegionSolidColor(const cv::Mat &full_image,
@@ -35,7 +47,7 @@ bool InferenceEngineTest::IsRegionSolidColor(const cv::Mat &full_image,
 
 TEST_F(InferenceEngineTest, LetterBoxTest) {
   cv::Mat source_image(1080, 1920, CV_8UC3, cv::Scalar(0, 0, 255));
-  auto letterboxed_result = engine_.LetterBox(source_image, 640, 640);
+  auto letterboxed_result = engine_->LetterBox(source_image, 640, 640);
   ASSERT_TRUE(letterboxed_result.ok());
   ASSERT_EQ(letterboxed_result->rows, 640);
   ASSERT_EQ(letterboxed_result->cols, 640);
