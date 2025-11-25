@@ -6,7 +6,12 @@
 namespace inference {
 
 struct InferenceParams {
+  std::string model_path;
+  int input_image_width;
+  int input_image_height;
   cv::Scalar padding_value;
+  float confidence_threshold;
+  float iou_threshold;
 };
 
 } // namespace inference
