@@ -1,8 +1,8 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 cc_library(
-    name = "image_info",
-    hdrs = ["image_info.h"],
+    name = "detection",
+    hdrs = ["detection.h"],
 )
 
 cc_library(
@@ -28,7 +28,9 @@ cc_library(
     hdrs = ["inference_engine.h"],
     visibility = ["//inference/tests:__subpackages__"],
     deps = [
+        ":detection",
         ":inference_params",
+        "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/status:statusor",
         "@opencv",
     ],
